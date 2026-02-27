@@ -1,0 +1,40 @@
+# Territorial.io AI Bot - Python Dependencies
+# Install with: pip install -r requirements.txt
+
+# ─────────────────────────────────────────────
+# Browser Automation
+# ─────────────────────────────────────────────
+playwright>=1.40.0          # Browser control (Chromium/Firefox/WebKit)
+# After installing, run: playwright install chromium
+
+# ─────────────────────────────────────────────
+# Computer Vision
+# ─────────────────────────────────────────────
+opencv-python>=4.8.0        # Screen capture, image processing
+Pillow>=10.0.0              # Image handling for PyTorch transforms
+numpy>=1.24.0               # Numerical arrays
+
+# ─────────────────────────────────────────────
+# Deep Learning (PyTorch)
+# ─────────────────────────────────────────────
+# CPU-only (lighter, works everywhere):
+torch>=2.0.0
+torchvision>=0.15.0
+
+# For GPU support, install manually:
+# pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118
+
+# ─────────────────────────────────────────────
+# Utilities
+# ─────────────────────────────────────────────
+scikit-learn>=1.3.0         # LabelEncoder, train_test_split
+matplotlib>=3.7.0           # Visualization and debug plots
+tqdm>=4.65.0                # Progress bars
+
+# ─────────────────────────────────────────────
+# Optional: OCR for troop number reading
+# ─────────────────────────────────────────────
+# pytesseract>=0.3.10       # Requires Tesseract binary installed separately
+# Install Tesseract: sudo apt-get install tesseract-ocr (Linux)
+#                   brew install tesseract (macOS)
+#                   https://github.com/UB-Mannheim/tesseract/wiki (Windows)

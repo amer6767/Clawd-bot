@@ -1,0 +1,4 @@
+# Place trained model files here:
+# - vision_model.pth     (download from Kaggle vision training notebook)
+# - brain_model.pth      (download from Kaggle brain training notebook)
+# - label_encoder.pkl    (download from Kaggle vision training notebook)
