@@ -10,7 +10,7 @@ playwright>=1.40.0          # Browser control (Chromium/Firefox/WebKit)
 # ─────────────────────────────────────────────
 # Computer Vision
 # ─────────────────────────────────────────────
-opencv-python>=4.8.0        # Screen capture, image processing
+opencv-python-headless>=4.8.0  # Screen capture, image processing (headless-safe)
 Pillow>=10.0.0              # Image handling for PyTorch transforms
 numpy>=1.24.0               # Numerical arrays
 

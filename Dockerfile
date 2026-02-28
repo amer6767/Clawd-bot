@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y \
     libexpat1 \
     libfontconfig1 \
     libgbm1 \
-    libgcc1 \
+    libgcc-s1 \
     libglib2.0-0 \
     libgtk-3-0 \
     libnspr4 \
@@ -39,9 +39,11 @@ RUN apt-get update && apt-get install -y \
     libxtst6 \
     lsb-release \
     xdg-utils \
-    libgles2 \
     libgl1 \
     && rm -rf /var/lib/apt/lists/*
+
+# Ensure Python output is sent straight to logs (no buffering)
+ENV PYTHONUNBUFFERED=1
 
 # Set working directory
 WORKDIR /app
