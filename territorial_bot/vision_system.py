@@ -179,7 +179,7 @@ class VisionSystem:
             self.model = TerritoryClassifierCNN(
                 num_classes=self.cfg.get("vision_num_classes", 4)
             )
-            state_dict = torch.load(model_path, map_location=self.device)
+            state_dict = torch.load(model_path, map_location=self.device, weights_only=True)
             self.model.load_state_dict(state_dict)
             self.model.to(self.device)
             self.model.eval()
@@ -348,27 +348,27 @@ class VisionSystem:
 
         cfg = self.cfg
 
-        # Check own territory
-        lo = cfg["own_color_hsv_lower"]
-        hi = cfg["own_color_hsv_upper"]
-        if lo[0] <= h <= hi[0] and lo[1] <= s <= hi[1] and lo[2] <= v <= hi[2]:
-            return "own", 0.85
-
-        # Check enemy territory
-        lo = cfg["enemy_color_hsv_lower"]
-        hi = cfg["enemy_color_hsv_upper"]
-        if lo[0] <= h <= hi[0] and lo[1] <= s <= hi[1] and lo[2] <= v <= hi[2]:
-            return "enemy", 0.80
-
-        # Check neutral (low saturation)
-        lo = cfg["neutral_color_hsv_lower"]
-        hi = cfg["neutral_color_hsv_upper"]
-        if lo[0] <= h <= hi[0] and lo[1] <= s <= hi[1] and lo[2] <= v <= hi[2]:
-            return "neutral", 0.75
-
-        # Very dark = border/wall
+        # Very dark = border/wall (check first)
         if v < 40:
             return "border", 0.90
+
+        # Low saturation = neutral/gray territory
+        lo = cfg["neutral_color_hsv_lower"]
+        hi = cfg["neutral_color_hsv_upper"]
+        if lo[1] <= s <= hi[1] and lo[2] <= v <= hi[2]:
+            return "neutral", 0.75
+
+        # Check own territory (blue range: H 100-130)
+        lo = cfg["own_color_hsv_lower"]
+        hi = cfg["own_color_hsv_upper"]
+        if lo[0] <= h <= hi[0] and s >= lo[1] and v >= lo[2]:
+            return "own", 0.85
+
+        # Check enemy territory (red range: H 0-15 or 165-180)
+        lo = cfg["enemy_color_hsv_lower"]
+        hi = cfg["enemy_color_hsv_upper"]
+        if (h <= hi[0] or h >= 165) and s >= lo[1] and v >= lo[2]:
+            return "enemy", 0.80
 
         return "unknown", 0.3
 

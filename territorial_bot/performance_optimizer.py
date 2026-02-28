@@ -279,32 +279,41 @@ class SmartFrameSelector:
     def should_process(self, frame: np.ndarray) -> bool:
         """
         Determine if frame should be processed based on changes.
+        Always processes if there is significant motion; skips static frames.
         """
         if self.previous_frame is None:
             self.previous_frame = frame.copy()
             return True
-        
+
+        # Ensure frames have same shape before comparison
+        if frame.shape != self.previous_frame.shape:
+            self.previous_frame = frame.copy()
+            return True
+
         # Calculate difference
         try:
             gray_current = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             gray_prev = cv2.cvtColor(self.previous_frame, cv2.COLOR_BGR2GRAY)
-            
+
             # Resize for faster comparison
             gray_current = cv2.resize(gray_current, (160, 120))
             gray_prev = cv2.resize(gray_prev, (160, 120))
-            
+
             diff = cv2.absdiff(gray_current, gray_prev)
-            self.frame_difference = np.mean(diff)
-            
-            # Update previous frame periodically
-            if self.frame_difference > self.motion_threshold:
+            self.frame_difference = float(np.mean(diff))
+
+            has_motion = self.frame_difference > self.motion_threshold
+
+            # Update previous frame when there is motion
+            if has_motion:
                 self.previous_frame = frame.copy()
-                return True
-            
-            return self.frame_difference > self.motion_threshold
-            
+
+            return has_motion
+
         except Exception as e:
             logger.debug(f"Frame selection error: {e}")
+            # On error, always process to avoid getting stuck
+            self.previous_frame = frame.copy()
             return True
     
     def get_change_magnitude(self) -> float:

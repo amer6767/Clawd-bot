@@ -10,7 +10,6 @@ import time
 from pathlib import Path
 from typing import Dict, List, Optional
 from dataclasses import dataclass, asdict
-from collections import defaultdict
 import numpy as np
 
 logger = logging.getLogger(__name__)
@@ -79,9 +78,8 @@ class LearningSystem:
         self.total_losses = 0
         
         # Strategy performance tracking
-        self.strategy_performance: Dict[str, StrategyPerformance] = defaultdict(
-            lambda: StrategyPerformance(strategy_name="default")
-        )
+        # Note: defaultdict is not used here because we need the key as strategy_name
+        self.strategy_performance: Dict[str, StrategyPerformance] = {}
         
         # Current game tracking
         self.current_game_id: Optional[str] = None
@@ -162,10 +160,10 @@ class LearningSystem:
         """Update performance metrics for the current strategy."""
         # Determine strategy based on game characteristics
         strategy = self._classify_game_strategy(record)
-        
+
         if strategy not in self.strategy_performance:
             self.strategy_performance[strategy] = StrategyPerformance(strategy_name=strategy)
-        
+
         perf = self.strategy_performance[strategy]
         
         # Update running averages

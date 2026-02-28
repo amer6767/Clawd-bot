@@ -96,8 +96,11 @@ class ActionSystem:
         """)
 
         logger.info(f"Navigating to {GAME_URL}...")
-        await self._page.goto(GAME_URL, wait_until="networkidle", timeout=30000)
-        await asyncio.sleep(2)
+        try:
+            await self._page.goto(GAME_URL, wait_until="domcontentloaded", timeout=30000)
+        except Exception as e:
+            logger.warning(f"Page load warning (may be normal for SPA): {e}")
+        await asyncio.sleep(3)
 
         # Locate the game canvas
         await self._locate_canvas()
@@ -275,39 +278,80 @@ class ActionSystem:
     async def join_game(self, player_name: str = "AIBot"):
         """
         Attempt to join a game session on Territorial.io.
-        Looks for the name input and play button.
+        Territorial.io uses a canvas-based UI; we interact via keyboard/mouse.
         """
         if not self._page:
             return
 
         logger.info(f"Attempting to join game as '{player_name}'...")
 
-        try:
-            # Wait for name input field
-            name_input = await self._page.wait_for_selector(
-                "input[type='text'], input[placeholder*='name'], input[placeholder*='Name']",
-                timeout=5000
-            )
-            if name_input:
-                await name_input.triple_click()
-                await name_input.type(player_name, delay=50)
-                logger.info(f"Entered player name: {player_name}")
-        except Exception:
-            logger.warning("Name input not found; skipping name entry.")
+        # Wait for page to be fully loaded
+        await asyncio.sleep(2)
 
         try:
-            # Click play/start button
-            play_btn = await self._page.wait_for_selector(
-                "button:has-text('Play'), button:has-text('Start'), "
-                "button:has-text('Join'), #play-btn, .play-button",
-                timeout=5000
-            )
+            # territorial.io has a name input field - try multiple selectors
+            name_selectors = [
+                "input[type='text']",
+                "input[placeholder*='name' i]",
+                "input[placeholder*='Name' i]",
+                "#name-input",
+                ".name-input",
+                "input[maxlength]",
+            ]
+            name_input = None
+            for selector in name_selectors:
+                try:
+                    name_input = await self._page.wait_for_selector(
+                        selector, timeout=2000
+                    )
+                    if name_input:
+                        break
+                except Exception:
+                    continue
+
+            if name_input:
+                await name_input.triple_click()
+                await name_input.fill(player_name)
+                logger.info(f"Entered player name: {player_name}")
+            else:
+                logger.warning("Name input not found; skipping name entry.")
+        except Exception as e:
+            logger.warning(f"Name entry failed: {e}")
+
+        try:
+            # Try multiple play button selectors for territorial.io
+            play_selectors = [
+                "button:has-text('Play')",
+                "button:has-text('Start')",
+                "button:has-text('Join')",
+                "#play-btn",
+                ".play-button",
+                ".btn-play",
+                "input[type='submit']",
+                "button[type='submit']",
+            ]
+            play_btn = None
+            for selector in play_selectors:
+                try:
+                    play_btn = await self._page.wait_for_selector(
+                        selector, timeout=2000
+                    )
+                    if play_btn:
+                        break
+                except Exception:
+                    continue
+
             if play_btn:
                 await play_btn.click()
                 logger.info("Clicked play button.")
                 await asyncio.sleep(3)
-        except Exception:
-            logger.warning("Play button not found; game may already be running.")
+            else:
+                # Fallback: try pressing Enter to start
+                logger.info("Play button not found; trying Enter key to start game.")
+                await self._page.keyboard.press("Enter")
+                await asyncio.sleep(3)
+        except Exception as e:
+            logger.warning(f"Play button interaction failed: {e}")
 
         # Re-locate canvas after joining
         await self._locate_canvas()
@@ -336,7 +380,10 @@ class ActionSystem:
 
         # Fallback: reload page
         logger.info("Reloading page for restart...")
-        await self._page.reload(wait_until="networkidle")
+        try:
+            await self._page.reload(wait_until="domcontentloaded", timeout=30000)
+        except Exception as e:
+            logger.warning(f"Page reload warning: {e}")
         await asyncio.sleep(3)
         await self._locate_canvas()
 

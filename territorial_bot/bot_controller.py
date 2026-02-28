@@ -27,6 +27,7 @@ import logging
 import signal
 import sys
 import time
+import os
 from pathlib import Path
 from typing import Optional
 
@@ -143,8 +144,8 @@ class BotController:
         self._last_tick_time = 0.0
 
         # Register signal handlers for graceful shutdown
-        signal.signal(signal.SIGINT, self._signal_handler)
-        signal.signal(signal.SIGTERM, self._signal_handler)
+        # Note: signal handlers are registered in _run() for asyncio compatibility
+        self._loop: Optional[asyncio.AbstractEventLoop] = None
 
         logger.info(
             f"BotController initialized | "
@@ -153,9 +154,16 @@ class BotController:
         )
 
     def _signal_handler(self, signum, frame):
-        """Handle Ctrl+C and SIGTERM gracefully."""
+        """Handle Ctrl+C and SIGTERM gracefully (non-asyncio context)."""
         logger.info(f"Signal {signum} received. Stopping bot...")
-        self.stop()
+        self._running = False
+        if self._loop and self._loop.is_running():
+            self._loop.call_soon_threadsafe(self._loop.stop)
+
+    def _async_signal_handler(self):
+        """Handle signals from within the asyncio event loop."""
+        logger.info("Shutdown signal received. Stopping bot gracefully...")
+        self._running = False
 
     # ── Public Controls ────────────────────────────────────────────────────
 
@@ -183,6 +191,15 @@ class BotController:
 
     async def _run(self):
         """Main async entry point."""
+        # Register signal handlers in the asyncio event loop
+        self._loop = asyncio.get_running_loop()
+        for sig in (signal.SIGINT, signal.SIGTERM):
+            try:
+                self._loop.add_signal_handler(sig, self._async_signal_handler)
+            except (NotImplementedError, RuntimeError):
+                # Windows doesn't support add_signal_handler; fall back
+                signal.signal(sig, self._signal_handler)
+
         try:
             await self.action.launch()
             await self.action.join_game(self.player_name)

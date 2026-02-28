@@ -176,7 +176,7 @@ class BrainSystem:
         model_path = Path(self.cfg["brain_model_path"])
         if model_path.exists():
             try:
-                checkpoint = torch.load(model_path, map_location=self.device)
+                checkpoint = torch.load(model_path, map_location=self.device, weights_only=False)
                 self.policy_net.load_state_dict(checkpoint["policy_net"])
                 self.target_net.load_state_dict(checkpoint["target_net"])
                 self.epsilon = checkpoint.get("epsilon", self.cfg["epsilon_end"])

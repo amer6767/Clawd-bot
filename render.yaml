@@ -1,11 +1,10 @@
 services:
   - type: worker
     name: territorial-bot
-    runtime: python
-    buildCommand: pip install -r territorial_bot/requirements.txt && playwright install chromium && playwright install-deps chromium
-    startCommand: cd territorial_bot && python bot_controller.py --headless --name "AIBot"
+    runtime: docker
+    dockerfilePath: ./Dockerfile
     envVars:
       - key: PYTHONUNBUFFERED
         value: "1"
-      - key: DISPLAY
-        value: ""
+      - key: PYTHONDONTWRITEBYTECODE
+        value: "1"

@@ -126,19 +126,20 @@ class EnemyTracker:
     def __init__(self, save_path: str = "models/enemy_tracking.json"):
         self.save_path = Path(save_path)
         self.save_path.parent.mkdir(parents=True, exist_ok=True)
-        
+
         # Active enemy tracking
         self.enemies: Dict[str, EnemyPlayer] = {}
-        
+
         # Color to player ID mapping (for Territorial.io, each player has unique color)
+        # Keys stored as tuples; JSON serialization converts to lists so we normalize on load
         self.color_map: Dict[Tuple[int, int, int], str] = {}
-        
+
         # Historical data
         self.total_enemies_encountered = 0
-        
+
         # Load previous data
         self._load_data()
-        
+
         logger.info(f"EnemyTracker initialized with {len(self.enemies)} tracked enemies")
     
     def detect_enemies(self, game_state) -> List[EnemyPlayer]:
@@ -364,25 +365,50 @@ class EnemyTracker:
         """Load enemy tracking data."""
         if not self.save_path.exists():
             return
-        
+
         try:
             with open(self.save_path, 'r') as f:
                 data = json.load(f)
-            
+
             self.total_enemies_encountered = data.get("total_enemies_encountered", 0)
-            
+
             # Restore enemy data (without history to save space)
             for pid, enemy_data in data.get("enemies", {}).items():
-                # Only restore current state, not full history
-                enemy = EnemyPlayer(**enemy_data)
-                # Clear old history to start fresh
-                enemy.territory_history = []
-                enemy.position_history = []
-                self.enemies[pid] = enemy
-                if enemy.color_detected:
-                    self.color_map[enemy.color_detected] = pid
-            
+                try:
+                    # JSON converts tuples to lists; convert color_detected back to tuple
+                    if "color_detected" in enemy_data and isinstance(
+                        enemy_data["color_detected"], list
+                    ):
+                        enemy_data["color_detected"] = tuple(enemy_data["color_detected"])
+
+                    # Convert position_history entries from lists to tuples
+                    if "position_history" in enemy_data:
+                        enemy_data["position_history"] = [
+                            (tuple(pos) if isinstance(pos, list) else pos, t)
+                            for pos, t in enemy_data["position_history"]
+                        ]
+
+                    # Convert territory_history entries (list of [pct, time])
+                    if "territory_history" in enemy_data:
+                        enemy_data["territory_history"] = [
+                            tuple(entry) if isinstance(entry, list) else entry
+                            for entry in enemy_data["territory_history"]
+                        ]
+
+                    enemy = EnemyPlayer(**enemy_data)
+                    # Clear old history to start fresh
+                    enemy.territory_history = []
+                    enemy.position_history = []
+                    self.enemies[pid] = enemy
+
+                    if enemy.color_detected:
+                        color_key = tuple(enemy.color_detected)
+                        self.color_map[color_key] = pid
+
+                except Exception as inner_e:
+                    logger.warning(f"Skipping corrupt enemy record {pid}: {inner_e}")
+
             logger.info(f"Loaded {len(self.enemies)} tracked enemies from history")
-            
+
         except Exception as e:
             logger.error(f"Failed to load enemy data: {e}")

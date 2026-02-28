@@ -40,10 +40,17 @@ RUN apt-get update && apt-get install -y \
     lsb-release \
     xdg-utils \
     libgl1 \
+    libgles2 \
+    libdrm2 \
+    libxkbcommon0 \
     && rm -rf /var/lib/apt/lists/*
 
 # Ensure Python output is sent straight to logs (no buffering)
 ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# Playwright requires this for headless Chromium
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 
 # Set working directory
 WORKDIR /app
@@ -52,16 +59,23 @@ WORKDIR /app
 COPY territorial_bot/requirements.txt ./requirements.txt
 
 # Install Python dependencies
-RUN pip3 install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Install Playwright and Chromium browser
-RUN pip3 install playwright && playwright install chromium && playwright install-deps chromium
+RUN pip install --no-cache-dir playwright && \
+    playwright install chromium && \
+    playwright install-deps chromium
 
 # Copy the entire project
 COPY . .
+
+# Create necessary directories
+RUN mkdir -p /app/territorial_bot/logs \
+             /app/territorial_bot/models \
+             /app/territorial_bot/screenshots
 
 # Set working directory to the bot folder
 WORKDIR /app/territorial_bot
 
 # Run the bot headless
-CMD ["python3", "bot_controller.py", "--headless", "--name", "AIBot"]
+CMD ["python", "bot_controller.py", "--headless", "--name", "AIBot"]
