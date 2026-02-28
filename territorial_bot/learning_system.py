@@ -293,7 +293,7 @@ class LearningSystem:
                 self.game_history.append(GameRecord(**game_data))
             
             # Restore strategy performance
-            for name, perf_data in data.get("strategy_performance", {}):
+            for name, perf_data in data.get("strategy_performance", {}).items():
                 self.strategy_performance[name] = StrategyPerformance(**perf_data)
             
             logger.info(f"Loaded {len(self.game_history)} previous games and "

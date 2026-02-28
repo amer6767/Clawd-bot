@@ -191,7 +191,9 @@ class EnemyTracker:
                 enemy = self.enemies[player_id]
                 
                 # Calculate territory percentage from positions
-                territory_pct = len(positions) / (game_state.grid_rows * game_state.grid_cols)
+                grid_rows = len(game_state.grid) if game_state.grid else 1
+                grid_cols = len(game_state.grid[0]) if game_state.grid else 1
+                territory_pct = len(positions) / max(1, grid_rows * grid_cols)
                 enemy.update_territory(territory_pct, current_time)
                 
                 # Estimate position (centroid of territory)
