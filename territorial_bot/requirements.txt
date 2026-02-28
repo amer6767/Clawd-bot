@@ -1,26 +1,23 @@
-# Territorial.io AI Bot - Python Dependencies
-# Install with: pip install -r requirements.txt
+# Territorial Bot - Kaggle/Cloud Requirements
 
-# ─────────────────────────────────────────────
 # Browser Automation
-# ─────────────────────────────────────────────
 playwright>=1.40.0
 
-# ─────────────────────────────────────────────
 # Computer Vision
-# ─────────────────────────────────────────────
 opencv-python-headless>=4.8.0
 Pillow>=10.0.0
 numpy>=1.24.0
 
-# ─────────────────────────────────────────────
-# Deep Learning (PyTorch - CPU only for Railway)
-# ─────────────────────────────────────────────
+# Deep Learning (PyTorch - CPU only)
 torch>=2.0.0
 torchvision>=0.15.0
 
-# ─────────────────────────────────────────────
-# Utilities
-# ─────────────────────────────────────────────
+# Machine Learning
 scikit-learn>=1.3.0
+
+# Progress bars
 tqdm>=4.65.0
+
+# API Server (for Kaggle ngrok integration)
+flask>=3.0.0
+pyngrok>=7.0.0
