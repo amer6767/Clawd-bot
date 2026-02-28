@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Territorial Bot Control</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #1a1a2e;
+      color: #eaeaea;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #e94560;
+      font-size: 1.6rem;
+      margin-bottom: 20px;
+      letter-spacing: 1px;
+    }
+
+    .card {
+      background: #16213e;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      border: 1px solid #0f3460;
+    }
+
+    .card h2 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #a0a0c0;
+      margin-bottom: 12px;
+    }
+
+    /* URL Input */
+    .url-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .url-row input {
+      flex: 1;
+      background: #0f3460;
+      border: 1px solid #e94560;
+      border-radius: 8px;
+      color: #eaeaea;
+      font-size: 0.9rem;
+      padding: 10px 12px;
+      outline: none;
+    }
+
+    .url-row input::placeholder {
+      color: #6060a0;
+    }
+
+    .btn-save {
+      background: #e94560;
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 10px 14px;
+      white-space: nowrap;
+    }
+
+    .btn-save:active {
+      opacity: 0.8;
+    }
+
+    /* Control Buttons */
+    .btn-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn-control {
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      flex: 1;
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      padding: 18px 10px;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+
+    .btn-control:active {
+      opacity: 0.8;
+      transform: scale(0.97);
+    }
+
+    .btn-start {
+      background: #27ae60;
+      color: #fff;
+    }
+
+    .btn-stop {
+      background: #e94560;
+      color: #fff;
+    }
+
+    /* Status */
+    .status-badge {
+      display: inline-block;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 6px 14px;
+    }
+
+    .status-running {
+      background: #1e5c38;
+      color: #2ecc71;
+    }
+
+    .status-stopped {
+      background: #3c1a1a;
+      color: #e74c3c;
+    }
+
+    .status-starting {
+      background: #3c3000;
+      color: #f39c12;
+    }
+
+    .status-error {
+      background: #4a0000;
+      color: #ff6b6b;
+    }
+
+    .status-disconnected {
+      background: #2a2a2a;
+      color: #888;
+    }
+
+    .status-idle {
+      background: #1a1a3e;
+      color: #a0a0c0;
+    }
+
+    .error-msg {
+      color: #ff6b6b;
+      font-size: 0.8rem;
+      margin-top: 8px;
+      word-break: break-all;
+    }
+
+    /* Screenshot */
+    .screenshot-container {
+      background: #0a0a1a;
+      border-radius: 8px;
+      min-height: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .screenshot-container img {
+      border-radius: 8px;
+      max-width: 100%;
+      display: block;
+    }
+
+    .screenshot-placeholder {
+      color: #404060;
+      font-size: 0.85rem;
+      text-align: center;
+      padding: 20px;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .stat-item {
+      background: #0f3460;
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .stat-label {
+      color: #a0a0c0;
+      font-size: 0.7rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      color: #e94560;
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+
+    /* Refresh indicator */
+    .refresh-info {
+      color: #505070;
+      font-size: 0.7rem;
+      margin-top: 8px;
+      text-align: right;
+    }
+
+    /* Toast notification */
+    #toast {
+      background: #e94560;
+      border-radius: 8px;
+      bottom: 20px;
+      color: #fff;
+      display: none;
+      font-size: 0.85rem;
+      left: 50%;
+      padding: 10px 20px;
+      position: fixed;
+      transform: translateX(-50%);
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🎮 Territorial Bot Control</h1>
+
+  <!-- URL Config -->
+  <div class="card">
+    <h2>🔗 Kaggle ngrok URL</h2>
+    <div class="url-row">
+      <input type="url" id="ngrokUrl" placeholder="https://xxxx.ngrok.io" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
+      <button class="btn-save" onclick="saveUrl()">Save</button>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="card">
+    <h2>⚙️ Bot Controls</h2>
+    <div class="btn-row">
+      <button class="btn-control btn-start" onclick="startBot()">▶ START BOT</button>
+      <button class="btn-control btn-stop" onclick="stopBot()">■ STOP BOT</button>
+    </div>
+  </div>
+
+  <!-- Status -->
+  <div class="card">
+    <h2>📡 Status</h2>
+    <span id="statusBadge" class="status-badge status-idle">idle</span>
+    <div id="errorMsg" class="error-msg" style="display:none;"></div>
+    <div class="refresh-info">Auto-refreshes every 3s</div>
+  </div>
+
+  <!-- Screenshot -->
+  <div class="card">
+    <h2>📸 Live Screenshot</h2>
+    <div class="screenshot-container" id="screenshotContainer">
+      <div class="screenshot-placeholder" id="screenshotPlaceholder">No screenshot yet.<br>Start the bot to see live view.</div>
+      <img id="screenshotImg" style="display:none;" alt="Bot screenshot" />
+    </div>
+    <div class="refresh-info">Auto-refreshes every 2s</div>
+  </div>
+
+  <!-- Stats -->
+  <div class="card">
+    <h2>📊 Stats</h2>
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="stat-label">Wins</div>
+        <div class="stat-value" id="statWins">—</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">Losses</div>
+        <div class="stat-value" id="statLosses">—</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">Territory %</div>
+        <div class="stat-value" id="statTerritory">—</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">Score</div>
+        <div class="stat-value" id="statScore">—</div>
+      </div>
+    </div>
+    <div class="refresh-info">Auto-refreshes every 3s</div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script>
+    // ── State ──────────────────────────────────────────────────────────────
+    let ngrokUrl = '';
+    let statusInterval = null;
+    let screenshotInterval = null;
+    let statsInterval = null;
+
+    // ── Init ───────────────────────────────────────────────────────────────
+    (function init() {
+      const saved = localStorage.getItem('ngrokUrl');
+      if (saved) {
+        ngrokUrl = saved;
+        document.getElementById('ngrokUrl').value = saved;
+      }
+      startPolling();
+    })();
+
+    // ── URL Management ─────────────────────────────────────────────────────
+    function saveUrl() {
+      const input = document.getElementById('ngrokUrl').value.trim().replace(/\/$/, '');
+      if (!input) {
+        showToast('Please enter a valid URL');
+        return;
+      }
+      ngrokUrl = input;
+      localStorage.setItem('ngrokUrl', ngrokUrl);
+      showToast('URL saved!');
+      startPolling();
+    }
+
+    // ── Bot Controls ───────────────────────────────────────────────────────
+    async function startBot() {
+      if (!ngrokUrl) { showToast('Set the ngrok URL first!'); return; }
+      try {
+        const res = await fetch(ngrokUrl + '/start', {
+          method: 'POST',
+          mode: 'cors',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await res.json();
+        showToast(data.message || data.status);
+        refreshStatus();
+      } catch (e) {
+        showToast('Failed to connect: ' + e.message);
+        setDisconnected();
+      }
+    }
+
+    async function stopBot() {
+      if (!ngrokUrl) { showToast('Set the ngrok URL first!'); return; }
+      try {
+        const res = await fetch(ngrokUrl + '/stop', {
+          method: 'POST',
+          mode: 'cors',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await res.json();
+        showToast(data.message || data.status);
+        refreshStatus();
+      } catch (e) {
+        showToast('Failed to connect: ' + e.message);
+        setDisconnected();
+      }
+    }
+
+    // ── Polling ────────────────────────────────────────────────────────────
+    function startPolling() {
+      if (statusInterval) clearInterval(statusInterval);
+      if (screenshotInterval) clearInterval(screenshotInterval);
+      if (statsInterval) clearInterval(statsInterval);
+
+      if (!ngrokUrl) return;
+
+      refreshStatus();
+      refreshScreenshot();
+      refreshStats();
+
+      statusInterval = setInterval(refreshStatus, 3000);
+      screenshotInterval = setInterval(refreshScreenshot, 2000);
+      statsInterval = setInterval(refreshStats, 3000);
+    }
+
+    async function refreshStatus() {
+      if (!ngrokUrl) return;
+      try {
+        const res = await fetch(ngrokUrl + '/status', { mode: 'cors' });
+        const data = await res.json();
+        updateStatusBadge(data.status || 'idle', data.error);
+      } catch (e) {
+        setDisconnected();
+      }
+    }
+
+    async function refreshScreenshot() {
+      if (!ngrokUrl) return;
+      try {
+        const res = await fetch(ngrokUrl + '/screenshot', { mode: 'cors' });
+        const data = await res.json();
+        if (data.screenshot) {
+          const img = document.getElementById('screenshotImg');
+          const placeholder = document.getElementById('screenshotPlaceholder');
+          img.src = 'data:image/png;base64,' + data.screenshot;
+          img.style.display = 'block';
+          placeholder.style.display = 'none';
+        }
+      } catch (e) {
+        // Silently fail for screenshot — don't spam toasts
+      }
+    }
+
+    async function refreshStats() {
+      if (!ngrokUrl) return;
+      try {
+        const res = await fetch(ngrokUrl + '/stats', { mode: 'cors' });
+        const data = await res.json();
+        document.getElementById('statWins').textContent = data.wins !== undefined ? data.wins : '—';
+        document.getElementById('statLosses').textContent = data.losses !== undefined ? data.losses : '—';
+        const terr = data.territory_pct !== undefined
+          ? (data.territory_pct * 100).toFixed(1) + '%'
+          : '—';
+        document.getElementById('statTerritory').textContent = terr;
+        document.getElementById('statScore').textContent = data.score !== undefined ? data.score : '—';
+      } catch (e) {
+        // Silently fail
+      }
+    }
+
+    // ── UI Helpers ─────────────────────────────────────────────────────────
+    function updateStatusBadge(status, error) {
+      const badge = document.getElementById('statusBadge');
+      const errorDiv = document.getElementById('errorMsg');
+
+      badge.textContent = status;
+      badge.className = 'status-badge';
+
+      switch (status) {
+        case 'running':
+          badge.classList.add('status-running');
+          break;
+        case 'stopped':
+          badge.classList.add('status-stopped');
+          break;
+        case 'starting':
+          badge.classList.add('status-starting');
+          break;
+        case 'error':
+          badge.classList.add('status-error');
+          break;
+        default:
+          badge.classList.add('status-idle');
+      }
+
+      if (error) {
+        errorDiv.textContent = '⚠ ' + error;
+        errorDiv.style.display = 'block';
+      } else {
+        errorDiv.style.display = 'none';
+      }
+    }
+
+    function setDisconnected() {
+      const badge = document.getElementById('statusBadge');
+      badge.textContent = 'Disconnected';
+      badge.className = 'status-badge status-disconnected';
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 2500);
+    }
+  </script>
+</body>
+</html>
