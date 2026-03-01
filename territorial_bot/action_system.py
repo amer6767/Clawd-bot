@@ -20,8 +20,8 @@ except ImportError:
     PLAYWRIGHT_AVAILABLE = False
     logging.warning("Playwright not installed. Run: pip install playwright && playwright install chromium")
 
-from config import BROWSER_CONFIG, ACTION_CONFIG, GAME_URL
-from brain_system import Decision, Action
+from territorial_bot.config import BROWSER_CONFIG, ACTION_CONFIG, GAME_URL
+from territorial_bot.brain_system import Decision, Action
 
 logger = logging.getLogger(__name__)
 

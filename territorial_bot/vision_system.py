@@ -24,7 +24,7 @@ except ImportError:
     TORCH_AVAILABLE = False
     logging.warning("PyTorch not available. Vision model inference disabled.")
 
-from config import VISION_CONFIG, PLAYER_COLORS, COLOR_MATCH_TOLERANCE
+from territorial_bot.config import VISION_CONFIG, PLAYER_COLORS, COLOR_MATCH_TOLERANCE
 
 logger = logging.getLogger(__name__)
 
@@ -487,7 +487,7 @@ class VisionSystem:
 
     def _determine_game_phase(self, state: GameState) -> str:
         """Determine early/mid/late game based on territory ownership."""
-        from config import BRAIN_CONFIG
+        from territorial_bot.config import BRAIN_CONFIG
         pct = state.own_territory_pct
         if pct < BRAIN_CONFIG["early_game_threshold"]:
             return "early"

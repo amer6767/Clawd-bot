@@ -33,17 +33,17 @@ from typing import Optional
 import cv2
 import numpy as np
 
-from config import CONTROLLER_CONFIG, BROWSER_CONFIG, ACTION_CONFIG, BRAIN_CONFIG, VISION_CONFIG
-from vision_system import VisionSystem, GameState
-from brain_system import BrainSystem, Decision
-from action_system import ActionSystem
-from enemy_tracker import EnemyTracker
-from smart_strategy import SmartStrategy, StrategyType
-from learning_system import LearningSystem
-from performance_optimizer import PerformanceOptimizer, SmartFrameSelector
-from anti_detection import AntiDetection
-from map_analyzer import MapAnalyzer, MapAnalysis
-from stats_dashboard import StatsDashboard
+from territorial_bot.config import CONTROLLER_CONFIG, BROWSER_CONFIG, ACTION_CONFIG, BRAIN_CONFIG, VISION_CONFIG
+from territorial_bot.vision_system import VisionSystem, GameState
+from territorial_bot.brain_system import BrainSystem, Decision
+from territorial_bot.action_system import ActionSystem
+from territorial_bot.enemy_tracker import EnemyTracker
+from territorial_bot.smart_strategy import SmartStrategy, StrategyType
+from territorial_bot.learning_system import LearningSystem
+from territorial_bot.performance_optimizer import PerformanceOptimizer, SmartFrameSelector
+from territorial_bot.anti_detection import AntiDetection
+from territorial_bot.map_analyzer import MapAnalyzer, MapAnalysis
+from territorial_bot.stats_dashboard import StatsDashboard
 
 # ─────────────────────────────────────────────
 # LOGGING SETUP

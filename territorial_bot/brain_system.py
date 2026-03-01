@@ -22,8 +22,8 @@ except ImportError:
     TORCH_AVAILABLE = False
     logging.warning("PyTorch not available. Brain system will use rule-based fallback.")
 
-from config import BRAIN_CONFIG
-from vision_system import GameState
+from territorial_bot.config import BRAIN_CONFIG
+from territorial_bot.vision_system import GameState
 
 logger = logging.getLogger(__name__)
 
